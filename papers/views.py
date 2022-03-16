@@ -46,6 +46,7 @@ class PaperAPI(APIView):
 
 # CLASS SENSORVIEW
 class SensorAPI(APIView):
+
     def post(self, request):
 
         campos_request = sorted(request.data)
@@ -68,26 +69,29 @@ class SensorAPI(APIView):
             return JsonResponse({"error":str(e)})
 
         return JsonResponse({"status":"Ok", "mensagem":"Cadastro Realizado"})
+   
     def get(self, request):
-        campos_request = sorted(request.data)
-        campos_obrigatorios = sorted(["busca", "valor"])
+        busca = self.request.GET.get('busca', None)
+        valor = self.request.GET.get('valor', None)
+        limite = self.request.GET.get('limite', 100)
 
         # VALIDAÇÃO
-        if campos_request != campos_obrigatorios:
-            return JsonResponse({"error":"ausencia de parametros"})
+        if busca == None or valor == None or type(limite)!=int:
+
+            return JsonResponse({"error": "ausencia de parametros", "busca":busca, "valor":valor, "limite":limite})
+
+        
+
 
         campos = ['dado', 'created_at_date', 'created_at_time', 'id_dispositivo_ip', '_id']
         retorno = []
 
-        mango = {'selector': {request.data['busca']:request.data['valor']}, 'fields': campos,"limit": 100}
-        cont = 0
+        mango = {'selector': {busca:valor}, 'fields': campos, "limit": limite}
         for row in db.find(mango): 
-            cont+=1
             dic = {}
             for detail in campos:
                 dic[detail] = row[detail]                        
             retorno.append(dic)
-        print(cont)
         return JsonResponse(
             {
                 "quantidade": len(retorno),
